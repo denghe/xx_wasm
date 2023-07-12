@@ -1,2 +1,2 @@
 cd build
-emrun index.html
+emrun hello_world.html
