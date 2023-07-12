@@ -10,8 +10,12 @@
 #include <emscripten.h>
 #endif
 
+extern "C" {
+	int asdf();
+}
+
 int main(int argc, char** argv) {
-  printf("hello, world!\n");
+  printf("hello, world! %d\n", asdf());
 
   SDL_Init(SDL_INIT_VIDEO);
   SDL_Surface *screen = SDL_SetVideoMode(256, 256, 32, SDL_SWSURFACE);
