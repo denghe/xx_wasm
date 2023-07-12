@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(name hello_world_sdl)
+set(name hello_world_sdl2)
 project(${name})
 
 set(CMAKE_CXX_STANDARD 20)
@@ -20,6 +20,7 @@ file(GLOB_RECURSE SRCS
 add_executable(${name} ${SRCS})
 
 set(CMAKE_EXECUTABLE_SUFFIX ".html")
-target_compile_options(${name} PUBLIC
-	-sUSE_SDL
+target_link_options(${name} PUBLIC
+	-sUSE_SDL=2
+	-sLEGACY_GL_EMULATION
 )

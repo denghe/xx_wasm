@@ -19,16 +19,4 @@ file(GLOB_RECURSE SRCS
 )
 add_executable(${name} ${SRCS})
 
-source_group("" FILES ${SRCS})
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
-
-macro(append_linker_flags FLAGS)
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${FLAGS}")
-endmacro()
-
-if (EMSCRIPTEN)
-	set(CMAKE_EXECUTABLE_SUFFIX ".html")
-	append_linker_flags("-Oz")
-	append_linker_flags("-s MALLOC='emmalloc'")
-	append_linker_flags("-s NO_FILESYSTEM=1")
-endif()
+set(CMAKE_EXECUTABLE_SUFFIX ".html")
