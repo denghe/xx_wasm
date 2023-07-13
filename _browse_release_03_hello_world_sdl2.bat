@@ -1,0 +1,2 @@
+cd cmake-build-release/03_hello_world_sdl2
+emrun hello_world_sdl2.html
