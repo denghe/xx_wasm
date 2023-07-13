@@ -6,6 +6,10 @@ https://developer.mozilla.org/zh-CN/docs/WebAssembly/C_to_wasm
 
 https://techkblog.com/fixed-sharedarraybuffer-is-not-defined/
 
+https://developer.chrome.com/docs/devtools/wasm/
+
+https://developer.chrome.com/blog/wasm-debugging-2020/
+
 demo at ???????????\emsdk\upstream\emscripten\test
 
 # emsdk
