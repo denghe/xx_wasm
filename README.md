@@ -48,4 +48,9 @@ File -- Settings -- Build, Execution, Deployment -- CMake -- Debug ( default min
 
 # browse
 
-_browse.bat for visit html in browser ( output path == cmake-build-debug )
+win11:
+terminal / power shell / command line:
+_browse_*.bat
+
+mac:
+sh _browse_*.bat
