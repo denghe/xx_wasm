@@ -10,6 +10,10 @@ https://developer.chrome.com/docs/devtools/wasm/
 
 https://developer.chrome.com/blog/wasm-debugging-2020/
 
+https://github.com/deathkiller/jazz2-native
+
+https://github.com/jamjarlabs/JamJar
+
 demo at ???????????\emsdk\upstream\emscripten\test
 
 # emsdk
