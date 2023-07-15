@@ -52,9 +52,14 @@ File -- Settings -- Build, Execution, Deployment -- CMake -- Debug ( default min
 
 # browse
 
-win11:
-terminal / power shell / command line:
-_browse_*.bat
+d == debug
+r = release
+
+win11 terminal / power shell / command line:
+
+d??_xxxxxxxxxxx.bat
+r??_xxxxxxxxxxx.bat
 
 mac:
-sh _browse_*.bat
+sh d??_xxxxxxxxxxx.bat
+sh r??_xxxxxxxxxxx.bat
