@@ -1,6 +1,6 @@
 #include <emscripten.h> // For emscripten_get_device_pixel_ratio()
 #include <emscripten/html5.h> // For Emscripten HTML5 WebGL context creation API
-#include <webgl/webgl1.h> // For Emscripten WebGL API headers (see also webgl/webgl1_ext.h and webgl/webgl2.h)
+#include <webgl/webgl2.h> // For Emscripten WebGL API headers (see also webgl/webgl?_ext.h and webgl/webgl?.h)
 #include <string.h> // For NULL and strcmp()
 #include <assert.h> // For assert()
 

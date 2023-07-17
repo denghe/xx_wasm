@@ -4,6 +4,10 @@
     var Module = {
         onRuntimeInitialized: function() {
             console.log('lerp result: ' + Module.lerp(1, 2, 0.5));
+            console.log('hi result: ' + Module.hi("asdf"));
+            var foo = new Module.Foo(123);
+            console.log('foo.name = ' + foo.name);
+            foo.delete()
         }
     };
 </script>
