@@ -1,5 +1,9 @@
 /*
 emcc -lembind -o quick_example.js quick_example.cpp
+
+show console:
+enter browse console mode: ( chrome : Control-Shift-J ) ( firefox: Control-Shift-K )
+
 */
 #include <emscripten/bind.h>
 
