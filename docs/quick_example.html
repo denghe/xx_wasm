@@ -6,7 +6,11 @@
             console.log('lerp result: ' + Module.lerp(1, 2, 0.5));
             console.log('hi result: ' + Module.hi("asdf"));
             var foo = new Module.Foo(123);
+            foo.SetCB(()=>{
+                console.log('cb');
+            })
             console.log('foo.name = ' + foo.name);
+            foo.CallCB();
             foo.delete()
         }
     };
