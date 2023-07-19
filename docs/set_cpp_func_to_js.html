@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+<script>
+    var Module = {
+        onRuntimeInitialized: function() {
+            var t = {};
+            t.onClick = (aValue)=>{
+                console.log(aValue);
+                t.cb = aValue;
+            }
+            Module.SetMemberCallback(t, "onClick");
+            console.log(t);
+            t.cb();
+        }
+    };
+</script>
+<script src="set_cpp_func_to_js.js"></script>
+</html>
