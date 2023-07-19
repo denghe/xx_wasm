@@ -24,6 +24,7 @@ void PrintVal(emscripten::val const& v) {
     PrintValHandle(v.as_handle());
 }
 
+// todo: replace int to shared ptr obj for destruct remove callback?
 
 int callbackAutoKey{};
 std::unordered_map<int, std::function<void()>> callbacks;
@@ -31,14 +32,14 @@ void Callback(int key) {
     callbacks[key]();
 }
 
-void SetMemberCallback(emscripten::val v, std::string prop) {
+void SetMemberCallback(emscripten::val v, std::string fn) {
     callbackAutoKey++;
     callbacks.insert(std::make_pair(callbackAutoKey, [k = callbackAutoKey]{
         PrintStr((std::string("call back. key = ") + std::to_string(k)).c_str());
     }));
     auto s = std::string("CppCallback = ()=>{ Module.Callback(" + std::to_string(callbackAutoKey) + "); };");
     emscripten_run_script(s.c_str());
-    v.set(prop.c_str(), emscripten::val::global("CppCallback"));
+    v.call<void>(fn.c_str(), emscripten::val::global("CppCallback"));
 }
 
 
