@@ -19,11 +19,6 @@ file(GLOB_RECURSE SRCS
 )
 add_executable(${name} ${SRCS})
 
-set(CMAKE_EXECUTABLE_SUFFIX ".html")
-
-
-
-
 
 add_definitions(-DMAKE_LIB)	# for lua
 include_directories(
@@ -35,3 +30,12 @@ file(GLOB SRCS	#GLOB_RECURSE
 )
 add_library(lua ${SRCS})
 target_link_libraries(${name} lua)
+
+
+if (EMSCRIPTEN)
+	set(CMAKE_EXECUTABLE_SUFFIX ".html")
+	target_link_options(${name} PUBLIC
+		-sALLOW_MEMORY_GROWTH=1
+		--preload-file "${CMAKE_CURRENT_LIST_DIR}/res@res"
+	)
+endif()
