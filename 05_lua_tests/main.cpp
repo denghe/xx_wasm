@@ -13,6 +13,32 @@ int main() {
 }
 
 
+//int main() {
+//    LuaStateWithInt L;
+//    xl::SetGlobalCClosure(L, "IndexFunc", [](lua_State*L)->int{
+//        auto k = xl::To<std::string_view>(L, 2);
+//        std::cout << k << std::endl;
+//        if (k == "abc"sv) {
+//            lua_pushcclosure(L, [](lua_State*L)->int{
+//                std::cout << "abc func has been called by args == " << xl::To<int>(L, 1) << " " << xl::To<std::string_view>(L, 2) << std::endl;
+//                return 0;
+//            }, 0);
+//            return 1;
+//        }
+//        return 0;
+//    });
+//    xl::DoString(L, R"(
+//    local t = {}
+//    local m = {}
+//    m.__index = IndexFunc
+//    setmetatable(t, m)
+//    t.abc(123, "asdf")
+//)");
+//    return 0;
+//}
+
+
+
 //#include <xx_dict.h>
 //#include <xx_list.h>
 //int main() {

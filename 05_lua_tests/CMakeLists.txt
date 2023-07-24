@@ -35,6 +35,7 @@ target_link_libraries(${name} lua)
 if (EMSCRIPTEN)
 	set(CMAKE_EXECUTABLE_SUFFIX ".html")
 	target_link_options(${name} PUBLIC
+		-lembind
 		-sALLOW_MEMORY_GROWTH=1
 		--preload-file "${CMAKE_CURRENT_LIST_DIR}/res@res"
 	)
