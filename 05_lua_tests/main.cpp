@@ -10,6 +10,7 @@ namespace xl = xx::Lua;
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 
+
 EM_JS(void, PrintValHandle, (emscripten::EM_VAL h), {
     console.log(Emval.toValue(h));
 });
@@ -18,6 +19,20 @@ void PrintVal(emscripten::val const& v) {
     PrintValHandle(v.as_handle());
 }
 
+// todo: lua stack -> emscripten::val array
+
+emscripten::val CallMemberFunc(emscripten::val& target, char const* memberName) {
+    return target.call<emscripten::val>(memberName);
+}
+emscripten::val CallMemberFunc(emscripten::val& target, char const* memberName, emscripten::val&& a1) {
+    return target.call<emscripten::val>(memberName, a1);
+}
+emscripten::val CallMemberFunc(emscripten::val& target, char const* memberName, emscripten::val&& a1, emscripten::val&& a2) {
+    return target.call<emscripten::val>(memberName, a1, a2);
+}
+emscripten::val CallMemberFunc(emscripten::val& target, char const* memberName, emscripten::val&& a1, emscripten::val&& a2, emscripten::val&& a3) {
+    return target.call<emscripten::val>(memberName, a1, a3);
+}
 
 int main() {
     emscripten_run_script(R"(
@@ -50,24 +65,22 @@ Bar.Add = function(a, b) {
     xl::RegisterBaseEnv(L);
 
     xx_assert(lua_gettop(L) == 0);
-    lua_newtable(L);                                            // ..., t
+    auto p = lua_newuserdata(L, sizeof(emscripten::val));		// ..., ud
+    new(p) emscripten::val(emscripten::val::global("Bar"));
+    // todo: __gc
     xx_assert(lua_gettop(L) == 1);
-    xl::SetField(L, "_tablename_", "Bar");                            // store tablename
-    lua_newtable(L);                                            // ..., t, mt
+    lua_newtable(L);                                            // ..., ud, mt
     xx_assert(lua_gettop(L) == 2);
     xl::SetFieldCClosure(L, "__index", [](auto L)->int{
-        lua_getfield(L, 1, "_tablename_");                                          // t, k, tablename
-        xx_assert(lua_type(L, -1) == LUA_TSTRING);
-        // todo: find k in tablename ??
         lua_pushcclosure(L, [](lua_State*L)->int{
-            auto member = xl::To<std::string_view>(L, lua_upvalueindex(1));
-            auto tablename = xl::To<std::string_view>(L, lua_upvalueindex(2));
-            std::cout << "lua: call " << tablename << "." << member << std::endl;
-            // todo: forward send arguments?
+            auto p = (emscripten::val*)lua_touserdata(L, lua_upvalueindex(1));
+            auto memberName = xl::To<std::string_view>(L, lua_upvalueindex(2));
+            auto numArgs = lua_gettop(L);
+            auto a1t = lua_type(L, 1);
+            //if (a1t == LUA_TUSERDATA)
             auto a1 = xl::To<int>(L, 1);
             auto a2 = xl::To<int>(L, 2);
-            auto r = emscripten::val::global(tablename.data()).call<emscripten::val>(member.data(), a1, a2);
-            // todo: switch case r type? convert to lua value?
+            auto r = CallMemberFunc(*p, memberName.data(), emscripten::val(a1), emscripten::val(a2));
             return xl::Push(L, r.as<int>());
         }, 2);                                                                      // t, c
         return 1;
@@ -83,7 +96,11 @@ Bar.Add = function(a, b) {
 print(Bar)
 print(Bar.Add)
 print(Bar.Add(1, 2))
-
+--[[
+local btn = CreateBtn()
+local node = GetRootNode();
+node.AddChild( btn )
+]]
 )");
 
 //    xl::DoFile(L, "/res/test1.lua");
