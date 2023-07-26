@@ -153,7 +153,7 @@ Bar.Log = function( o ) {
 
     xl::State L;
 
-    xl::SetGlobalCClosure(L, "GetJsObj", [](auto L){
+    xl::SetGlobalCClosure(L, "GetGlobalJsObj", [](auto L){
         auto name = xl::To<char const*>(L, 1);
         auto p = lua_newuserdata(L, sizeof(V));
         new(p) V(V::global(name));
@@ -162,7 +162,7 @@ Bar.Log = function( o ) {
     });
 
     xl::DoString(L, R"(
-local b = GetJsObj( "Bar" )
+local b = GetGlobalJsObj( "Bar" )
 print( b )
 print( b.Add(1, 2) )
 local o = b.CreateObject( "asdf" )
