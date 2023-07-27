@@ -192,6 +192,7 @@ a = function() {};
 b = new Object;
 c = { x:1, y:2 };
 d = [ 1, 2 ];
+e = 123;
 console.log( typeof(a) )
 console.log( typeof(b) )
 console.log( typeof(c) )
@@ -214,16 +215,20 @@ p = { x:1, y:2 };
 
     xl::State L;
 
-    xl::SetGlobalCClosure(L, "GetGlobalJsObj", [](auto L){
+    xl::SetGlobalCClosure(L, "FromJS", [](auto L){
         auto name = xl::To<char const*>(L, 1);
-        auto p = lua_newuserdata(L, sizeof(V));
-        new(p) V(V::global(name));
-        SetValMeta(L);
-        return 1;
+        auto v = V::global(name);
+        return HandleVal(L, v);
     });
 
     xl::DoString(L, R"(
-local b = GetGlobalJsObj( "Bar" )
+local c = FromJS( "c" )
+print( c )
+
+local e = FromJS( "e" )
+print( e )
+
+local b = FromJS( "Bar" )
 print( b )
 local f =  b.Add
 print( f )
@@ -238,7 +243,7 @@ local o = b.CreateObject( "asdf" )
 print( o )
 b.Log( o )
 
-local p = GetGlobalJsObj( "p" )
+local p = FromJS( "p" )
 print( p.x )
 
 )");
