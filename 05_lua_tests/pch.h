@@ -20,6 +20,7 @@ extern std::vector<V> gVals;
 extern std::vector<V*> gValptrs;
 extern std::unordered_map<std::string, double> gMap;
 // todo: cache metatable to registry
+void FillGValptrs(lua_State* L, int n);
 void SetValMeta(lua_State* L);
 int HandleVal(lua_State* L, V& m);
 int PushValFunction(lua_State* L, V& m);
