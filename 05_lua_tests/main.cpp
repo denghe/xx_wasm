@@ -47,6 +47,10 @@ Bar.Log = function( o ) {
 
 p = { x:1, y:2 };
 
+fff = ()=>{
+    console.log( "js: global fff lambda called" )
+};
+
 )");
 
     xl::State L;
@@ -73,6 +77,9 @@ b.Log( o )
 
 local p = FromJS( "p" )
 print( "lua: ", p.x )
+
+local fff = FromJS( "fff" )
+fff()
 
 )");
 
