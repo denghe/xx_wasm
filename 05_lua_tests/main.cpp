@@ -189,6 +189,8 @@ void SetValMeta(lua_State* L) {
         return HandleVal(L, m);
     });
 
+    // todo: __newindex ?
+
     lua_setmetatable(L, -2);                                    // ..., ud
     xx_assert(lua_gettop(L) == top);
 }
