@@ -26,111 +26,74 @@ bool IsFunction(V const& v) {
 
 int PushValFunction(lua_State* L, V& m) {
     if (lua_type(L, -2) == LUA_TNIL) {                      // ..., owner(nil?), memberName
-        lua_pop(L, 1);                                      // ..., nil
-        new(lua_newuserdata(L, sizeof(V))) V(std::move(m)); // ..., nil, m
+
+        lua_pop(L, 2);                                      // ...
+        new(lua_newuserdata(L, sizeof(V))) V(std::move(m)); // ..., m
         lua_newtable(L);
         xx::Lua::SetFieldCClosure(L, "__gc", [](lua_State* L)->int {
             ((V*)lua_touserdata(L, 1))->~V();
             return 0;
         });
         lua_setmetatable(L, -2);
-    }
-    lua_pushcclosure(L, [](lua_State*L)->int{
-        V* p{};
-        char const* memberName{};
-        if (lua_type(L, lua_upvalueindex(1)) == LUA_TNIL) {
-            p = (V*)lua_touserdata(L, lua_upvalueindex(2)); // ..., nil, m
-        } else {
-            p = (V*)lua_touserdata(L, lua_upvalueindex(1)); // ..., owner, memberName
-            memberName = xl::To<char const *>(L, lua_upvalueindex(2));
-        }
 
-        auto n = lua_gettop(L);
-        if (n) {
-            // auto remove self ?
-            if (memberName && lua_type(L, 1) == LUA_TUSERDATA && lua_touserdata(L, 1) == (void*)&p) {
-                lua_remove(L, 1);
-                --n;
-            }
+        lua_pushcclosure(L, [](lua_State*L)->int{
+            auto p = (V*)lua_touserdata(L, lua_upvalueindex(1));
+            auto n = lua_gettop(L);
+            if (n) {
 
-            gVals.resize(n);
-            gValptrs.resize(n);
+                gVals.resize(n);
+                gValptrs.resize(n);
 
-            for(int i = 0; i < n; ++i) {
-                auto idx = i + 1;
-                auto t = lua_type(L, idx);
-                switch(t) {
-                    case LUA_TNIL:
-                        gVals[i] = V::null();
-                        gValptrs[i] = &gVals[i];
-                        break;
-                    case LUA_TBOOLEAN:
-                        gVals[i] = V(xl::To<bool>(L, idx));
-                        gValptrs[i] = &gVals[i];
-                        break;
-                    case LUA_TLIGHTUSERDATA:
-                        xx_assert(false);
-                    case LUA_TNUMBER:
-                        gVals[i] = V(xl::To<double>(L, idx));
-                        gValptrs[i] = &gVals[i];
-                        break;
-                    case LUA_TSTRING:
-                        gVals[i] = V(xl::To<char const*>(L, idx));
-                        gValptrs[i] = &gVals[i];
-                        break;
-                    case LUA_TTABLE: {
-                        xl::To(L, idx, gMap);
-                        xx_assert(!gMap.empty());
-                        auto &o = gVals[i];
-                        gValptrs[i] = &o;
-                        o = V::object();
-                        for (auto &kv: gMap) {
-                            o.set(kv.first, kv.second);
+                for(int i = 0; i < n; ++i) {
+                    auto idx = i + 1;
+                    auto t = lua_type(L, idx);
+                    switch(t) {
+                        case LUA_TNIL:
+                            gVals[i] = V::null();
+                            gValptrs[i] = &gVals[i];
+                            break;
+                        case LUA_TBOOLEAN:
+                            gVals[i] = V(xl::To<bool>(L, idx));
+                            gValptrs[i] = &gVals[i];
+                            break;
+                        case LUA_TLIGHTUSERDATA:
+                            xx_assert(false);
+                        case LUA_TNUMBER:
+                            gVals[i] = V(xl::To<double>(L, idx));
+                            gValptrs[i] = &gVals[i];
+                            break;
+                        case LUA_TSTRING:
+                            gVals[i] = V(xl::To<char const*>(L, idx));
+                            gValptrs[i] = &gVals[i];
+                            break;
+                        case LUA_TTABLE: {
+                            xl::To(L, idx, gMap);
+                            xx_assert(!gMap.empty());
+                            auto &o = gVals[i];
+                            gValptrs[i] = &o;
+                            o = V::object();
+                            for (auto &kv: gMap) {
+                                o.set(kv.first, kv.second);
+                            }
+                            gMap.clear();
+                            break;
                         }
-                        gMap.clear();
-                        break;
+                        case LUA_TFUNCTION:
+                            // todo: emscripten_run_script create global function with unique name, then val get it ? how to gc ?
+                            xx_assert(false);
+                        case LUA_TUSERDATA:
+                            gValptrs[i] = (V*)lua_touserdata(L, idx);
+                            break;
+                        case LUA_TTHREAD:
+                            xx_assert(false);
+                        default:
+                            std::cout << "unsupported t ==" << t << std::endl;
+                            xx_assert(false);
                     }
-                    case LUA_TFUNCTION:
-                        // todo: emscripten_run_script create global function with unique name, then val get it ? how to gc ?
-                        xx_assert(false);
-                    case LUA_TUSERDATA:
-                        gValptrs[i] = (V*)lua_touserdata(L, idx);
-                        break;
-                    case LUA_TTHREAD:
-                        xx_assert(false);
-                    default:
-                        std::cout << "unsupported t ==" << t << std::endl;
-                        xx_assert(false);
                 }
             }
-        }
 
-        V r;
-        if (memberName) {
-            switch (n) {
-                case 0:
-                    r = p->template call<V>(memberName);
-                    break;
-                case 1:
-                    r = p->template call<V>(memberName, *gValptrs[0]);
-                    break;
-                case 2:
-                    r = p->template call<V>(memberName, *gValptrs[0], *gValptrs[1]);
-                    break;
-                case 3:
-                    r = p->template call<V>(memberName, *gValptrs[0], *gValptrs[1], *gValptrs[2]);
-                    break;
-                case 4:
-                    r = p->template call<V>(memberName, *gValptrs[0], *gValptrs[1], *gValptrs[2], *gValptrs[3]);
-                    break;
-                case 5:
-                    r = p->template call<V>(memberName, *gValptrs[0], *gValptrs[1], *gValptrs[2], *gValptrs[3], *gValptrs[4]);
-                    break;
-                    // known issue: add more ?
-                default:
-                    xx_assert(false);
-            }
-        } else {
+            V r;
             switch(n) {
                 case 0:
                     r = (*p)();
@@ -154,11 +117,105 @@ int PushValFunction(lua_State* L, V& m) {
                 default:
                     xx_assert(false);
             }
-        }
-        gVals.clear();
+            gVals.clear();
 
-        return HandleVal(L, r);
-    }, 2);
+            return HandleVal(L, r);
+        }, 2);
+    } else {
+        lua_pushcclosure(L, [](lua_State *L) -> int {
+            auto p = (V*)lua_touserdata(L, lua_upvalueindex(1));
+            auto memberName = xl::To<char const *>(L, lua_upvalueindex(2));
+
+            auto n = lua_gettop(L);
+            if (n) {
+                // auto remove self ?
+                if (memberName && lua_type(L, 1) == LUA_TUSERDATA && lua_touserdata(L, 1) == (void *) &p) {
+                    lua_remove(L, 1);
+                    --n;
+                }
+
+                gVals.resize(n);
+                gValptrs.resize(n);
+
+                for (int i = 0; i < n; ++i) {
+                    auto idx = i + 1;
+                    auto t = lua_type(L, idx);
+                    switch (t) {
+                        case LUA_TNIL:
+                            gVals[i] = V::null();
+                            gValptrs[i] = &gVals[i];
+                            break;
+                        case LUA_TBOOLEAN:
+                            gVals[i] = V(xl::To<bool>(L, idx));
+                            gValptrs[i] = &gVals[i];
+                            break;
+                        case LUA_TLIGHTUSERDATA:
+                            xx_assert(false);
+                        case LUA_TNUMBER:
+                            gVals[i] = V(xl::To<double>(L, idx));
+                            gValptrs[i] = &gVals[i];
+                            break;
+                        case LUA_TSTRING:
+                            gVals[i] = V(xl::To<char const *>(L, idx));
+                            gValptrs[i] = &gVals[i];
+                            break;
+                        case LUA_TTABLE: {
+                            xl::To(L, idx, gMap);
+                            xx_assert(!gMap.empty());
+                            auto &o = gVals[i];
+                            gValptrs[i] = &o;
+                            o = V::object();
+                            for (auto &kv: gMap) {
+                                o.set(kv.first, kv.second);
+                            }
+                            gMap.clear();
+                            break;
+                        }
+                        case LUA_TFUNCTION:
+                            // todo: emscripten_run_script create global function with unique name, then val get it ? how to gc ?
+                            xx_assert(false);
+                        case LUA_TUSERDATA:
+                            gValptrs[i] = (V *) lua_touserdata(L, idx);
+                            break;
+                        case LUA_TTHREAD:
+                            xx_assert(false);
+                        default:
+                            std::cout << "unsupported t ==" << t << std::endl;
+                            xx_assert(false);
+                    }
+                }
+            }
+
+            V r;
+            switch (n) {
+                case 0:
+                    r = p->template call<V>(memberName);
+                    break;
+                case 1:
+                    r = p->template call<V>(memberName, *gValptrs[0]);
+                    break;
+                case 2:
+                    r = p->template call<V>(memberName, *gValptrs[0], *gValptrs[1]);
+                    break;
+                case 3:
+                    r = p->template call<V>(memberName, *gValptrs[0], *gValptrs[1], *gValptrs[2]);
+                    break;
+                case 4:
+                    r = p->template call<V>(memberName, *gValptrs[0], *gValptrs[1], *gValptrs[2], *gValptrs[3]);
+                    break;
+                case 5:
+                    r = p->template call<V>(memberName, *gValptrs[0], *gValptrs[1], *gValptrs[2], *gValptrs[3], *gValptrs[4]);
+                    break;
+                    // known issue: add more ?
+                default:
+                    std::cout << "too many call args n == " << n << std::endl;
+                    xx_assert(false);
+            }
+            gVals.clear();
+
+            return HandleVal(L, r);
+        }, 2);
+    }
     return 1;
 }
 
