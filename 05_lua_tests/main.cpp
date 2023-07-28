@@ -15,17 +15,25 @@ using V = emscripten::val;
 
 EM_JS(void, PrintValHandle, (emscripten::EM_VAL h), {
     console.log(Emval.toValue(h));
-});
+})
 
 void PrintVal(V const& v) {
     PrintValHandle(v.as_handle());
 }
 
 EM_JS(bool, IsFunction_, (emscripten::EM_VAL h), {
-    let tn = typeof(Emval.toValue(h));
-    console.log('js: IsFunction_ tn == ' + tn);
-    return tn == 'function';
-});
+    let o = Emval.toValue(h);
+    let tn = typeof(o);
+    //console.log('js: IsFunction_ tn == ' + tn + ', o = ');
+    console.log(o);
+    if (tn == 'function') {
+        let keys = Object.keys(o);
+        if (keys.length == 0) return true;
+        console.log('js: IsFunction_ tn == function but have keys = ');
+        console.log(keys);
+        return false;
+    }
+})
 
 bool IsFunction(V const& v) {
     return IsFunction_(v.as_handle());
@@ -188,7 +196,10 @@ void SetValMeta(lua_State* L) {
 int main() {
     emscripten_run_script(R"(
 
-a = function() {};
+a = function() {
+    console.log( "a" );
+    this.abc = 123;
+};
 b = new Object;
 c = { x:1, y:2 };
 d = [ 1, 2 ];
@@ -197,6 +208,12 @@ console.log( typeof(a) )
 console.log( typeof(b) )
 console.log( typeof(c) )
 console.log( typeof(d) )
+
+var ks = Object.keys( a );
+for( i = 0; i < ks.length; ++i ) {
+    console.log( ks[i] + ':' + a[ks[i]] );
+}
+
 
 Bar = {};
 Bar.Add = function(a, b) {
@@ -223,28 +240,23 @@ p = { x:1, y:2 };
 
     xl::DoString(L, R"(
 local c = FromJS( "c" )
-print( c )
+print( "lua: ", c )
 
 local e = FromJS( "e" )
-print( e )
+print( "lua: ", e )
 
 local b = FromJS( "Bar" )
-print( b )
+print( "lua: ", b )
 local f =  b.Add
-print( f )
---[[
-b.Add = function()
-    print( "new func" )
-end
-]]
-print( f(1, 2) )
+print( "lua: ", f )
+print( "lua: ", f(1, 2) )
 
 local o = b.CreateObject( "asdf" )
-print( o )
+print( "lua: ", o )
 b.Log( o )
 
 local p = FromJS( "p" )
-print( p.x )
+print( "lua: ", p.x )
 
 )");
 
