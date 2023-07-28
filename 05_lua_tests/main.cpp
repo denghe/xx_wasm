@@ -50,12 +50,7 @@ p = { x:1, y:2 };
 )");
 
     xl::State L;
-
-    xl::SetGlobalCClosure(L, "FromJS", [](auto L){
-        auto name = xl::To<char const*>(L, 1);
-        auto v = V::global(name);
-        return HandleVal(L, v);
-    });
+    Lua_Register_FromJS(L);
 
     xl::DoString(L, R"(
 local c = FromJS( "c" )

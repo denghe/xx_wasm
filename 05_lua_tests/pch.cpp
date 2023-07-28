@@ -170,3 +170,14 @@ void SetValMeta(lua_State* L) {
     lua_setmetatable(L, -2);                                    // ..., ud
     xx_assert(lua_gettop(L) == top);
 }
+
+
+void Lua_Register_FromJS(lua_State* L) {
+    xl::SetGlobalCClosure(L, "FromJS", [](auto L){
+        auto name = xl::To<char const*>(L, 1);
+        auto v = V::global(name);
+        lua_pushnil(L); // should push  val "window" ?
+        lua_insert(L, 1);
+        return HandleVal(L, v);
+    });
+}

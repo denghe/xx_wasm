@@ -13,20 +13,17 @@ namespace xl = xx::Lua;
 #include <emscripten/val.h>
 using V = emscripten::val;
 
-
 void PrintVal(V const& v);
-
-
 bool IsFunction(V const& v);
-
 
 extern std::vector<V> gVals;
 extern std::vector<V*> gValptrs;
 extern std::unordered_map<std::string, double> gMap;
 // todo: cache metatable to registry
-
 void SetValMeta(lua_State* L);
 int HandleVal(lua_State* L, V& m);
 int PushValFunction(lua_State* L, V& m);
 int HandleVal(lua_State* L, V& m);
 void SetValMeta(lua_State* L);
+
+void Lua_Register_FromJS(lua_State* L);
