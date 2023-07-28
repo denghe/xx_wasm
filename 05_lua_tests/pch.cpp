@@ -25,10 +25,8 @@ bool IsFunction(V const& v) {
 }
 
 int PushValFunction(lua_State* L, V& m) {
-    int n = 2;
     if (lua_type(L, -2) == LUA_TNIL) {                      // ..., owner(nil?), memberName
         lua_pop(L, 1);                                      // ..., nil
-        n = 1;
         new(lua_newuserdata(L, sizeof(V))) V(std::move(m)); // ..., nil, m
         lua_newtable(L);
         xx::Lua::SetFieldCClosure(L, "__gc", [](lua_State* L)->int {
@@ -160,7 +158,7 @@ int PushValFunction(lua_State* L, V& m) {
         gVals.clear();
 
         return HandleVal(L, r);
-    }, n);
+    }, 2);
     return 1;
 }
 
