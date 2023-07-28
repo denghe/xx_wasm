@@ -25,17 +25,14 @@ bool IsFunction(V const& v) {
 }
 
 int PushValFunction(lua_State* L, V& m) {
-    if (lua_type(L, -2) == LUA_TNIL) {                      // ..., owner(nil?), memberName
-
-        lua_pop(L, 2);                                      // ...
-        new(lua_newuserdata(L, sizeof(V))) V(std::move(m)); // ..., m
+    if (lua_type(L, -1) == LUA_TNIL) {
+        new(lua_newuserdata(L, sizeof(V))) V(std::move(m)); // ..., nil, m
         lua_newtable(L);
         xx::Lua::SetFieldCClosure(L, "__gc", [](lua_State* L)->int {
             ((V*)lua_touserdata(L, 1))->~V();
             return 0;
         });
         lua_setmetatable(L, -2);
-
         lua_pushcclosure(L, [](lua_State*L)->int{
             auto p = (V*)lua_touserdata(L, lua_upvalueindex(1));
             auto n = lua_gettop(L);
@@ -120,7 +117,7 @@ int PushValFunction(lua_State* L, V& m) {
             gVals.clear();
 
             return HandleVal(L, r);
-        }, 2);
+        }, 1);  // ..., nil
     } else {
         lua_pushcclosure(L, [](lua_State *L) -> int {
             auto p = (V*)lua_touserdata(L, lua_upvalueindex(1));
@@ -214,7 +211,7 @@ int PushValFunction(lua_State* L, V& m) {
             gVals.clear();
 
             return HandleVal(L, r);
-        }, 2);
+        }, 2);  // ...
     }
     return 1;
 }
@@ -275,7 +272,6 @@ void Lua_Register_FromJS(lua_State* L) {
         auto name = xl::To<char const*>(L, 1);
         auto v = V::global(name);
         lua_pushnil(L); // should push  val "window" ?
-        lua_insert(L, 1);
         return HandleVal(L, v);
     });
 }
