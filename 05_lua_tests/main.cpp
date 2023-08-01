@@ -72,6 +72,7 @@ print( "lua: ", f )
 print( "lua: ", f(1, 2) )
 
 local o = b.CreateObject( "asdf" )
+o.aaa = 123
 print( "lua: ", o )
 b.Log( o )
 

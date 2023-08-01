@@ -168,7 +168,50 @@ void SetValMeta(lua_State* L) {
         return HandleVal(L, m);
     });
 
-    // todo: __newindex ?
+    xl::SetFieldCClosure(L, "__newindex", [](auto L)->int{
+        auto p = (V*)lua_touserdata(L, 1);
+        auto memberName = xl::To<char const*>(L, 2);
+        auto t = lua_type(L, 3);
+        switch(t) {
+            case LUA_TNIL:
+                p->set(memberName, V::null());
+                break;
+            case LUA_TBOOLEAN:
+                p->set(memberName, xl::To<bool>(L, 3));
+                break;
+            case LUA_TLIGHTUSERDATA:
+                xx_assert(false);
+            case LUA_TNUMBER:
+                p->set(memberName, xl::To<double>(L, 3));
+                break;
+            case LUA_TSTRING:
+                p->set(memberName, xl::To<char const*>(L, 3));
+                break;
+            case LUA_TTABLE: {
+                xl::To(L, 3, gMap);
+                xx_assert(!gMap.empty());
+                auto o = V::object();
+                for (auto &kv: gMap) {
+                    o.set(kv.first, kv.second);
+                }
+                gMap.clear();
+                p->set(memberName, o);
+                break;
+            }
+            case LUA_TFUNCTION:
+                // todo: emscripten_run_script create global function with unique name, then val get it ? how to gc ?
+                xx_assert(false);
+            case LUA_TUSERDATA:
+                p->set(memberName, *(V*)lua_touserdata(L, 3));
+                break;
+            case LUA_TTHREAD:
+                xx_assert(false);
+            default:
+                std::cout << "unsupported t ==" << t << std::endl;
+                xx_assert(false);
+        }
+        return 0;
+    });
 
     lua_setmetatable(L, -2);                                    // ..., ud
     xx_assert(lua_gettop(L) == top);
