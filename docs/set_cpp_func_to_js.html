@@ -13,13 +13,10 @@
     var Module = {
         onRuntimeInitialized: function() {
             var t = {};
-            t.onClick = (aValue)=>{
-                console.log(aValue);
-                t.cb = aValue;
-            }
-            Module.SetMemberCallback(t, "onClick");
+            Module.SetMemberCallback(t, "cb");
             console.log(t);
-            t.cb();
+            let r = t.cb(1, 2.1, "asdf");
+            console.log("r = ", r);
         }
     };
 </script>
