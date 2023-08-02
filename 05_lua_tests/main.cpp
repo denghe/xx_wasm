@@ -53,10 +53,9 @@ fff = ()=>{
 
 )");
 
-    xl::State L;
-    Lua_Register_FromJS(L);
+    Lua_Register_FromJS(gL);
 
-    xl::DoString(L, R"(
+    xl::DoString(gL, R"(
 local c = FromJS( "c" )
 local c2  = FromJS( "c" )
 

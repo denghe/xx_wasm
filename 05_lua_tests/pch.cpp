@@ -1,8 +1,114 @@
 #include "pch.h"
+//using LuaStateWithInt = xx::Lua::StateWithExtra<int>;
+//#define RefWeakTableRefId(L) LuaStateWithInt::Extra(L)
+//#include <xx_lua_shared.h>
+//LuaStateWithInt L;
+//xl::MakeUserdataWeakTable(L);
+//xl::RegisterBaseEnv(L);
+
+void PrintVal(V const& v);
+bool IsFunction(V const& v);
 
 std::vector<V> gVals;
 std::vector<V*> gValptrs;
 std::unordered_map<std::string, double> gMap;
+xl::State gL;
+V gV;
+
+// todo: cache metatable to registry
+void FillGValptrs(lua_State* L, int n);
+void SetValMeta(lua_State* L);
+int HandleVal(lua_State* L, V& m);
+int PushValFunction(lua_State* L, V& m);
+int HandleVal(lua_State* L, V& m);
+void SetValMeta(lua_State* L);
+
+// js need global function: WasmCallback => wasm.Callback
+emscripten::val const& Callback(int key, emscripten::val const& a) {
+    auto& L = gL;
+    auto top = lua_gettop(L);
+    lua_rawgeti(L, LUA_REGISTRYINDEX, key);             // ..., func
+    int n = a["length"].as<int>();
+    for (int i = 0; i < n; ++i) {                       // ..., func, args...
+        auto&& m = a[i];
+        if (m.isNull() || m.isUndefined()) {
+            lua_pushnil(L);
+        } else if (m.isTrue()) {
+            xl::Push(L, true);
+        } else if (m.isFalse()) {
+            xl::Push(L, false);
+        } else if (m.isNumber()) {
+            auto v = m.template as<double>();
+            if ((int64_t)v == v) xl::Push(L, (int64_t)v);
+            else xl::Push(L, v);
+        } else if (m.isString()) {
+            xl::Push(L, m.template as<std::string>());
+        } else if (IsFunction(m)) {
+            PushValFunction(L, m);
+        } else if (m.isArray()) {
+            // todo?
+            xx_assert(false);
+        } else {
+            new(lua_newuserdata(L, sizeof(V))) V(std::move(m));
+            SetValMeta(L);
+        }
+    }
+    lua_call(L, n, LUA_MULTRET);						// ..., rtv...?
+    auto sg = xx::MakeSimpleScopeGuard([&]{
+        lua_settop(L, top);								// ...
+    });
+    auto top2 = lua_gettop(L);
+    if (top2 > top) {                                   // has rtv
+        xx_assert(top + 1 == top2);
+        auto t = lua_type(L, top2);
+        switch(t) {
+            case LUA_TNIL:
+                gV = V::null();
+                break;
+            case LUA_TBOOLEAN:
+                gV = V(xl::To<bool>(L, top2));
+                break;
+            case LUA_TLIGHTUSERDATA:
+                xx_assert(false);
+            case LUA_TNUMBER:
+                gV = V(xl::To<double>(L, top2));
+                break;
+            case LUA_TSTRING:
+                gV = V(xl::To<char const*>(L, top2));
+                break;
+            case LUA_TTABLE: {
+                xl::To(L, top2, gMap);
+                xx_assert(!gMap.empty());
+                gV = V::object();
+                for (auto &kv: gMap) {
+                    gV.set(kv.first, kv.second);
+                }
+                gMap.clear();
+                break;
+            }
+            case LUA_TFUNCTION: {
+                auto k = luaL_ref(L, LUA_REGISTRYINDEX);
+                auto s = std::string("CppCallback = (...args)=>{ return WasmCallback(" + std::to_string(k) + ", args); };");
+                emscripten_run_script(s.c_str());   // todo: gc?
+                gV = emscripten::val::global("CppCallback");
+                break;
+            }
+            case LUA_TUSERDATA:
+                return *(V*)lua_touserdata(L, top2);
+            case LUA_TTHREAD:
+                xx_assert(false);
+            default:
+                std::cout << "unsupported t ==" << t << std::endl;
+                xx_assert(false);
+        }
+    } else {
+        gV = V{};
+    }
+    return gV;
+}
+EMSCRIPTEN_BINDINGS(my_binds1) {
+    emscripten::function("Callback", &Callback);
+}
 
 void FillGValptrs(lua_State* L, int n) {
     gVals.resize(n);
@@ -42,9 +148,15 @@ void FillGValptrs(lua_State* L, int n) {
                 gMap.clear();
                 break;
             }
-            case LUA_TFUNCTION:
-                // todo: emscripten_run_script create global function with unique name, then val get it ? how to gc ?
-                xx_assert(false);
+            case LUA_TFUNCTION: {
+                lua_pushvalue(L, idx);                          // ..., f, ..., f
+                auto k = luaL_ref(L, LUA_REGISTRYINDEX);        // ..., f, ...
+                auto s = std::string("CppCallback = (...args)=>{ return WasmCallback(" + std::to_string(k) + ", args); };");
+                emscripten_run_script(s.c_str());   // todo: gc?
+                gVals[i] = emscripten::val::global("CppCallback");
+                gValptrs[i] = &gVals[i];
+                break;
+            }
             case LUA_TUSERDATA:
                 gValptrs[i] = (V*)lua_touserdata(L, idx);
                 break;
@@ -198,9 +310,13 @@ void SetValMeta(lua_State* L) {
                 p->set(memberName, o);
                 break;
             }
-            case LUA_TFUNCTION:
-                // todo: emscripten_run_script create global function with unique name, then val get it ? how to gc ?
-                xx_assert(false);
+            case LUA_TFUNCTION: {
+                auto k = luaL_ref(L, LUA_REGISTRYINDEX);
+                auto s = std::string("CppCallback = (...args)=>{ return WasmCallback(" + std::to_string(k) + ", args); };");
+                emscripten_run_script(s.c_str());   // todo: gc?
+                p->set(memberName, emscripten::val::global("CppCallback"));
+                break;
+            }
             case LUA_TUSERDATA:
                 p->set(memberName, *(V*)lua_touserdata(L, 3));
                 break;
