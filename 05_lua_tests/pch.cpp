@@ -279,10 +279,9 @@ void SetValMeta(lua_State* L) {
             std::string s(memberName);
             if (auto c = s[0]; c >= 'a' && c <= 'z') {
                 s[0] = (char)std::toupper(c);
-            } else {
-                assert(c >= 'A' && c <= 'Z');
+            } else if (c >= 'A' && c <= 'Z') {
                 s[0] = (char)std::tolower(c);
-            }
+            } else return 0;
             m = (*p)[s.c_str()];
             if (m.isNull() || m.isUndefined()) return 0;
             lua_pop(L, 1);
