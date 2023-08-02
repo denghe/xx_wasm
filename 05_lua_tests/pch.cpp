@@ -198,7 +198,7 @@ int PushValFunction(lua_State* L, V& m) {
             auto n = lua_gettop(L);
             if (n) {
                 // auto remove self ?
-                if (memberName && lua_type(L, 1) == LUA_TUSERDATA && lua_touserdata(L, 1) == (void *) &p) {
+                if (memberName && lua_type(L, 1) == LUA_TUSERDATA && lua_touserdata(L, 1) == (void *)p) {
                     lua_remove(L, 1);
                     --n;
                 }
