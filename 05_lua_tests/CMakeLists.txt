@@ -31,9 +31,11 @@ file(GLOB SRCS	#GLOB_RECURSE
 add_library(lua ${SRCS})
 target_link_libraries(${name} lua)
 
-
 if (EMSCRIPTEN)
 	set(CMAKE_EXECUTABLE_SUFFIX ".html")
+	target_precompile_headers(${name}
+		PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/pch.h>
+	)
 	target_link_options(${name} PUBLIC
 		-lembind
 		-sALLOW_MEMORY_GROWTH=1
