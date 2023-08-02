@@ -274,7 +274,20 @@ void SetValMeta(lua_State* L) {
         auto memberName = xl::To<char const*>(L, 2);
 
         auto m = (*p)[memberName];
-        if (m.isNull() || m.isUndefined()) return 0;
+        if (m.isNull() || m.isUndefined()) {
+            // first letter : lower case / upper case compatible
+            std::string s(memberName);
+            if (auto c = s[0]; c >= 'a' && c <= 'z') {
+                s[0] = (char)std::toupper(c);
+            } else {
+                assert(c >= 'A' && c <= 'Z');
+                s[0] = (char)std::tolower(c);
+            }
+            m = (*p)[s.c_str()];
+            if (m.isNull() || m.isUndefined()) return 0;
+            lua_pop(L, 1);
+            xl::Push(L, s);
+        }
 
         return HandleVal(L, m);
     });

@@ -70,10 +70,10 @@ local f =  b.Add
 print( "lua: ", f )
 print( "lua: ", f(1, 2) )
 
-local o = b.CreateObject( "asdf" )
+local o = b.createObject( "asdf" )
 o.aaa = 123
 print( "lua: ", o )
-b.Log( o )
+b.log( o )
 
 local p = FromJS( "p" )
 print( "lua: ", p.x )
