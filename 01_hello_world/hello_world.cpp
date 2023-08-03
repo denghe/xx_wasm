@@ -1,4 +1,4 @@
-#include "xx_coros.h"
+#include "xx_task.h"
 
 xx::Task<int64_t> func1(int64_t a) {
     co_yield 0;
@@ -9,9 +9,9 @@ xx::Task<int64_t> func2(int64_t b) {
 }
 
 int main() {
-    xx::EventTasks<int, xx::Data_r&> tasks;
+    xx::EventTasks<> tasks;
     auto s = "asdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdfasdf"s;
-    tasks.AddLambda([&]()->xx::Task<>{
+    tasks.Add([&]()->xx::Task<>{
         auto secs = xx::NowSteadyEpochSeconds();
         int64_t n = 0;
         for (int64_t i = 0; i < 10000000; ++i) {
