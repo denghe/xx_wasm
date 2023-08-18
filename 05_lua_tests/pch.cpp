@@ -74,7 +74,7 @@ emscripten::val const& Callback(int key, emscripten::val const& a) {
                 gV = V(xl::To<double>(L, top2));
                 break;
             case LUA_TSTRING:
-                gV = V(xl::To<char const*>(L, top2));
+                gV = V(xl::To<std::string>(L, top2));
                 break;
             case LUA_TTABLE: {
                 xl::To(L, top2, gMap);
@@ -133,7 +133,7 @@ void FillGValptrs(lua_State* L, int n) {
                 gValptrs[i] = &gVals[i];
                 break;
             case LUA_TSTRING:
-                gVals[i] = V(xl::To<char const*>(L, idx));
+                gVals[i] = V(xl::To<std::string>(L, idx));
                 gValptrs[i] = &gVals[i];
                 break;
             case LUA_TTABLE: {
