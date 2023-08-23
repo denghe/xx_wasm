@@ -23,3 +23,11 @@ set(CMAKE_EXECUTABLE_SUFFIX ".html")
 target_compile_options(${name} PUBLIC
 	-sUSE_SDL
 )
+if(MSVC)
+	include_directories(
+		$ENV{EMSDK}/upstream/emscripten/system/lib/libcxx/include
+		$ENV{EMSDK}/upstream/emscripten/system/include
+		$ENV{EMSDK}/upstream/emscripten/system/lib/libc/musl/include
+		$ENV{EMSDK}/upstream/emscripten/system/lib/libc/musl/arch/emscripten
+	)
+endif()

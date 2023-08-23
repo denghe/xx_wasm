@@ -24,3 +24,11 @@ target_link_options(${name} PUBLIC
 	-sUSE_SDL=2
 	-sLEGACY_GL_EMULATION
 )
+if(MSVC)
+	include_directories(
+		$ENV{EMSDK}/upstream/emscripten/system/lib/libcxx/include
+		$ENV{EMSDK}/upstream/emscripten/system/include
+		$ENV{EMSDK}/upstream/emscripten/system/lib/libc/musl/include
+		$ENV{EMSDK}/upstream/emscripten/system/lib/libc/musl/arch/emscripten
+	)
+endif()

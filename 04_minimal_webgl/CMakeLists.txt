@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.20)
 
 # Default to release build if not specified
 if(NOT CMAKE_BUILD_TYPE)
@@ -87,3 +87,12 @@ file(GLOB_RECURSE assets *.png)
 foreach(asset ${assets})
 	file(COPY "${asset}" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/")
 endforeach()
+
+if(MSVC)
+	include_directories(
+		$ENV{EMSDK}/upstream/emscripten/system/lib/libcxx/include
+		$ENV{EMSDK}/upstream/emscripten/system/include
+		$ENV{EMSDK}/upstream/emscripten/system/lib/libc/musl/include
+		$ENV{EMSDK}/upstream/emscripten/system/lib/libc/musl/arch/emscripten
+	)
+endif()

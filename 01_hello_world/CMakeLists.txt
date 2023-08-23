@@ -20,3 +20,11 @@ file(GLOB_RECURSE SRCS
 add_executable(${name} ${SRCS})
 
 set(CMAKE_EXECUTABLE_SUFFIX ".html")
+if(MSVC)
+	include_directories(
+		$ENV{EMSDK}/upstream/emscripten/system/lib/libcxx/include
+		$ENV{EMSDK}/upstream/emscripten/system/include
+		$ENV{EMSDK}/upstream/emscripten/system/lib/libc/musl/include
+		$ENV{EMSDK}/upstream/emscripten/system/lib/libc/musl/arch/emscripten
+	)
+endif()

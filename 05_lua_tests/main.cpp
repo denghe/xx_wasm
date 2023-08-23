@@ -1,6 +1,36 @@
 #include "pch.h"
 
 int main() {
+
+    xl::SetGlobalCClosure(gL, "GetCallableUD", [](auto L)->int{
+        new (lua_newuserdata(gL, 4)) int(123);              // ud
+        lua_newtable(gL);                                   // ud, mt
+        xl::SetFieldCClosure(gL, "__call", [](auto L)->int {
+            auto top = (int)lua_gettop(L);
+            printf("asdf __call num args = %d\n", top);
+            for (int i = 1; i <= top; ++i) {
+                printf("asdf __call args[%d] type = %d\n", i, (int)lua_type(L, i));
+            }
+            return 0;
+        });
+        xl::SetFieldCClosure(L, "__index", [](auto L)->int {
+            printf("asdf __index num args = %d\n", (int)lua_gettop(L));
+            return 0;
+        });
+        lua_setmetatable(L, -2);                            // ud
+        return 1;
+    }, 0);
+
+    xl::DoString(gL, R"(
+
+local ud = GetCallableUD()
+local asdf = ud.asdf
+ud( 1, "22" )
+
+)");
+
+
+
     emscripten_run_script(R"(
 
 

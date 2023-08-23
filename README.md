@@ -41,9 +41,8 @@ install dependency libraries through compilation:
 em++ -sUSE_SDL=2 o.cpp -o o.html
 
 
-# ide
-
-ide: clion
+# ide1
+clion
 
 path add for ninja64.exe:
 C:\Program Files\JetBrains\CLion 20????????????????????????????\bin\ninja\win\x64
@@ -52,21 +51,30 @@ path add for mingw32-make.exe:
 C:\Program Files\JetBrains\CLion 20????????????????????????????\bin\mingw\bin
 
 config ( for every cmake project ):
-File -- Settings -- Build, Execution, Deployment -- CMake -- Debug ( default mingw ) CMake options: 
+File -- Settings -- Build, Execution, Deployment -- CMake -- Debug ( default mingw ) CMake options:
 
 -DCMAKE_TOOLCHAIN_FILE=???????????\emsdk\upstream\emscripten\cmake\Modules\Platform\Emscripten.cmake
 
+more: ( ignore vs build dir )
+mouse right click on "dir", Mark Directory As -- Excluded
+
+# build
+click clion "hammer" icon
 
 # browse
+clion terminal window:
+cd cmake-build-????????
+emrun ?????????.html
 
-d == debug
-r = release
+# ide2 ( better for c++ because clion lag & keep use so many cpu )
+vs22 with llvm installed
 
-win11 terminal / power shell / command line:
+use cmake gui fill -T        ClangCL         generate .sln & open
 
-d??_xxxxxxxxxxx.bat
-r??_xxxxxxxxxxx.bat
-
-mac:
-sh d??_xxxxxxxxxxx.bat
-sh r??_xxxxxxxxxxx.bat
+# build & browse
+in vs22, hot key : ctrl + `  open developer powershells:
+mkdir ?????
+cd ?????
+emcmake cmake .. -DCMAKE_BUILD_TYPE=Release                      = Debug | Release | RelWithDebInfo
+emmake make -j24
+emrun ?????????.html

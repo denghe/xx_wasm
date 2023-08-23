@@ -1,3 +1,5 @@
 build
+web
 .idea
+.vs
 cmake-build-*
