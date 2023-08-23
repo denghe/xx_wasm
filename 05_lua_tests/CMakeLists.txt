@@ -36,11 +36,21 @@ if (EMSCRIPTEN)
 	target_precompile_headers(${name}
 		PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/pch.h>
 	)
-	target_link_options(${name} PUBLIC
-		-lembind
-		-sALLOW_MEMORY_GROWTH=1
-		--preload-file "${CMAKE_CURRENT_LIST_DIR}/res@res"
-	)
+
+	if (${CMAKE_BUILD_TYPE} MATCHES "Rel*")
+		target_link_options(${name} PUBLIC
+			-lembind
+			-sALLOW_MEMORY_GROWTH=1
+			--preload-file "${CMAKE_CURRENT_LIST_DIR}/res@res"
+		)
+	else()
+		target_link_options(${name} PUBLIC
+			-lembind
+			-sALLOW_MEMORY_GROWTH=1
+			-sNO_DISABLE_EXCEPTION_CATCHING=1
+			--preload-file "${CMAKE_CURRENT_LIST_DIR}/res@res"
+		)
+	endif()
 endif()
 
 if(MSVC)

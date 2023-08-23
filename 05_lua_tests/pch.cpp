@@ -21,6 +21,14 @@ std::vector<V> gVals;
 std::vector<V*> gValptrs;
 std::unordered_map<std::string, double> gMap;
 
+void DumpStackTypes(lua_State* L) {
+#ifndef NDEBUG
+    auto top = lua_gettop(L);
+    for (int i = 1; i <= top; ++i) {
+        printf("L[%d].type = %s\n", i, lua_typename(L, lua_type(L, i)));
+    }
+#endif
+}
 
 // lua stack -> gValptrs
 void ToVals(lua_State* L, int beginIndex, int size) {
@@ -178,11 +186,12 @@ int CallVal(lua_State* L) {
         }
     }
     if (PushVal(L, r)) {
-        new(lua_newuserdatauv(L, sizeof(V), 2)) V(std::move(r));
+        new(lua_newuserdata(L, sizeof(V))) V(std::move(r));
         SetValMeta(L);
     }
     return 1;
 }
+
 
 // todo: cache metatable to registry
 void SetValMeta(lua_State* L) {
@@ -219,7 +228,7 @@ void SetValMeta(lua_State* L) {
             lua_pushvalue(L, 1);                                            // ud, mn, m, ud
             lua_setiuservalue(L, 3, 1);                                     // ud, mn, m
             lua_pushvalue(L, 2);                                            // ud, mn, m, mn
-            lua_setiuservalue(L, 3, 1);                                     // ud, mn, m
+            lua_setiuservalue(L, 3, 2);                                     // ud, mn, m
             SetValMeta(L);
         }
         return 1;
@@ -275,11 +284,14 @@ void SetValMeta(lua_State* L) {
     });
 
     xl::SetFieldCClosure(L, "__call", [](auto L)->int {
-        if (LUA_TNONE == lua_getiuservalue(L, 1, 1)) {          // ud, args..., owner?
+        auto top = lua_gettop(L);
+        lua_getiuservalue(L, 1, 1);                             // ud, args..., owner?nil?
+        if (lua_isnil(L, -1)) {
             lua_pop(L, 1);                                      // ud, args...
             return CallVal<true>(L);
         } else {
             lua_getiuservalue(L, 1, 2);                         // ud, args..., owner, memberName
+            DumpStackTypes(L);
             return CallVal<false>(L);
         }
     });
@@ -313,7 +325,7 @@ emscripten::val const& Callback(int key, emscripten::val const& a) {
             // todo?
             xx_assert(false);
         } else {
-            new(lua_newuserdatauv(L, sizeof(V), 2)) V(std::move(m));
+            new(lua_newuserdata(L, sizeof(V))) V(std::move(m));
             SetValMeta(L);
         }
     }
@@ -342,7 +354,7 @@ void Lua_Register_FromJS(lua_State* L) {
         auto name = xl::To<char const*>(L, 1);
         auto v = V::global(name);
         if (PushVal(L, v)) {
-            new(lua_newuserdatauv(L, sizeof(V), 2)) V(std::move(v));
+            new(lua_newuserdata(L, sizeof(V))) V(std::move(v));
             SetValMeta(L);
         }
         return 1;
