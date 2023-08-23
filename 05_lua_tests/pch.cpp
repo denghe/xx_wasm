@@ -132,7 +132,6 @@ int CallVal(lua_State* L) {
     V r;
     if constexpr (direct) {                                                     // ud, args...
         ToVals(L, startIndex, numArgs);
-        auto v = (V*)lua_touserdata(L, 1);                                      // ud is v
         switch(numArgs) {
             case 0:
                 r = (*v)();
@@ -159,7 +158,7 @@ int CallVal(lua_State* L) {
     } else {                                                                    // ud, args..., owner, memberName
         numArgs -= 2;
         ToVals(L, startIndex, numArgs);
-        auto v = (V*)lua_touserdata(L, -2);                                     // ud's owner.member is v
+        v = (V*)lua_touserdata(L, -2);                                          // ud's owner.member is v
         auto memberName = xl::To<char const*>(L, -1);
         switch (numArgs) {
         case 0:
@@ -284,14 +283,12 @@ void SetValMeta(lua_State* L) {
     });
 
     xl::SetFieldCClosure(L, "__call", [](auto L)->int {
-        auto top = lua_gettop(L);
         lua_getiuservalue(L, 1, 1);                             // ud, args..., owner?nil?
         if (lua_isnil(L, -1)) {
             lua_pop(L, 1);                                      // ud, args...
             return CallVal<true>(L);
         } else {
             lua_getiuservalue(L, 1, 2);                         // ud, args..., owner, memberName
-            DumpStackTypes(L);
             return CallVal<false>(L);
         }
     });
