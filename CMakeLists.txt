@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(all)
+project(xx_wasm)
 
 add_subdirectory(01_hello_world)
 add_subdirectory(02_hello_world_sdl)
