@@ -122,16 +122,16 @@ void SetValMeta(lua_State* L);
 
 template<bool direct>
 int CallVal(lua_State* L) {
-    auto v = (V*)lua_touserdata(L, 1);
-    int numArgs = lua_gettop(L) - 1, startIndex = 2;
+    auto v = (V*)lua_touserdata(L, (direct ? 1 : -2));
+    int numArgs = lua_gettop(L) - (direct ? 1 : 3), startIndex = 2;
     // auto remove lua first args : self
-    if (lua_type(L, startIndex) == LUA_TUSERDATA && lua_touserdata(L, startIndex) == (void*)v) {
+    if (numArgs > 0 && lua_type(L, startIndex) == LUA_TUSERDATA && lua_touserdata(L, startIndex) == (void*)v) {
         ++startIndex;
         --numArgs;
     }
+    ToVals(L, startIndex, numArgs);
     V r;
     if constexpr (direct) {                                                     // ud, args...
-        ToVals(L, startIndex, numArgs);
         switch(numArgs) {
             case 0:
                 r = (*v)();
@@ -156,9 +156,6 @@ int CallVal(lua_State* L) {
                 xx_assert(false);
         }
     } else {                                                                    // ud, args..., owner, memberName
-        numArgs -= 2;
-        ToVals(L, startIndex, numArgs);
-        v = (V*)lua_touserdata(L, -2);                                          // ud's owner.member is v
         auto memberName = xl::To<char const*>(L, -1);
         switch (numArgs) {
         case 0:
